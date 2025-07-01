@@ -1,62 +1,64 @@
 PFE : Module de Gestion de la Maintenance (Backend)
-1. Description du Projet
-Ce dépôt contient le code source du backend pour le module de gestion de la maintenance préventive et corrective, réalisé dans le cadre de mon projet de fin d'études pour l'EGMM.
+1. À propos du projet
+Ce projet est le backend que j'ai développé pour mon Projet de Fin d'Études. Il s'agit d'un module de gestion de la maintenancepour les  besoins de l'EGMM, qui digitalise le suivi des interventions préventives et correctives.
 
-L'application est développée en Java avec le framework Spring Boot et expose une API RESTful pour gérer le cycle de vie complet d'une intervention de maintenance :
+L'application a été construite avec Spring Boot et expose une API REST pour gérer le cycle de vie complet d'une intervention :
 
-Gestion des équipements
+Gestion des équipements du parc
 
-Signalement des anomalies
+Signalement d'une anomalie sur un équipement
 
-Création des bons de travaux
+Création d'un bon de travaux suite à une anomalie
 
-Suivi des interventions
+Suivi des différentes interventions
 
-2. Technologies Utilisées
+2. Stack Technique
 Langage : Java 17
 
 Framework : Spring Boot 3
 
-Accès aux données : Spring Data JPA (avec Hibernate)
+Accès aux données : Spring Data JPA (Hibernate)
 
-Base de données de test : H2 In-Memory
+Base de données (test) : H2 In-Memory
 
 API : RESTful
 
-Gestion des dépendances : Maven
+Build : Maven
 
-3. Comment Lancer le Projet
-Clonez ce dépôt sur votre machine locale.
+3. Lancement du projet
+Pour lancer le serveur en local :
 
-Assurez-vous que Java 17 et Maven sont installés et configurés.
+Clonez ce dépôt (git clone ...).
+
+Prérequis : Assurez-vous que Java 17 et Maven sont bien installés sur votre machine.
 
 Ouvrez un terminal à la racine du projet.
 
-Exécutez la commande : mvn spring-boot:run
+Lancez la commande : mvn spring-boot:run
 
-Le serveur sera lancé et l'application sera accessible sur http://localhost:8080.
+Le serveur démarrera sur http://localhost:8080.
 
-4. Guide de Test de l'API
-Pour démontrer le bon fonctionnement de l'application, voici un scénario de test complet à effectuer avec un client API comme Postman.
+4. Tester l'API
+Pour vérifier que la logique métier fonctionne correctement, voici un scénario de test simple à réaliser avec Postman. Il simule un cycle de maintenance de A à Z.
 
-a. Créer un Équipement
+a. Créer un équipement
 Méthode : POST
 
 URL : http://localhost:8080/api/equipements
 
-Body (JSON) :
+Exemple de Body (JSON) :
 
 {
     "nom": "Concasseur B-101",
     "code": "CNC-B101"
 }
 
-b. Signaler une Anomalie
+b. Signaler une anomalie sur cet équipement
 Méthode : POST
 
 URL : http://localhost:8080/api/anomalies?equipementId=1
 
-Body (JSON) :
+Exemple de Body (JSON) :
 
 {
     "numPVCA": "PVCA-TEST-001",
@@ -65,21 +67,21 @@ Body (JSON) :
     "degreUrgence": 1
 }
 
-c. Créer un Bon de Travaux
+c. Créer le bon de travaux correspondant
 Méthode : POST
 
 URL : http://localhost:8080/api/bons-de-travaux?anomalieId=1
 
-Body (JSON) :
+Exemple de Body (JSON) :
 
 {
     "numFiche": "BT-2025-001",
     "description": "Investigation du bruit"
 }
 
-d. Vérification de la Logique Métier
+d. Vérifier la mise à jour automatique
 Méthode : GET
 
 URL : http://localhost:8080/api/anomalies/1
 
-Résultat attendu : Le statut de l'anomalie doit être automatiquement passé à EN_TRAITEMENT.
+Résultat : Le statut de l'anomalie doit automatiquement passer à EN_TRAITEMENT, ce qui confirme que la logique de workflow est bien implémentée.
