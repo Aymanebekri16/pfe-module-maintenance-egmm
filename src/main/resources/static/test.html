@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Maintenance</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 50px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        input, select, button {
+            padding: 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input, select {
+            width: 300px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+        }
+        h3 {
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        hr {
+            margin: 30px 0;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔧 Test API Maintenance - Module EGMM</h1>
+
+    <div class="section">
+        <h3>📋 Créer un Équipement</h3>
+        <form id="equipementForm">
+            <div class="form-group">
+                <input type="text" id="nom" placeholder="Nom de l'équipement (ex: Broyeur PM20)" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="code" placeholder="Code unique (ex: BRY-001)" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="modele" placeholder="Modèle (ex: PM20)">
+            </div>
+            <button type="submit">Créer Équipement</button>
+        </form>
+
+        <button class="btn-secondary" onclick="getEquipements()">📋 Voir tous les Équipements</button>
+    </div>
+
+    <hr>
+
+    <div class="section">
+        <h3>🔧 Créer une Intervention</h3>
+        <form id="interventionForm">
+            <div class="form-group">
+                <input type="number" id="equipementId" placeholder="ID de l'équipement (ex: 1)" required min="1">
+            </div>
+            <div class="form-group">
+                <input type="text" id="description" placeholder="Description de l'intervention" required>
+            </div>
+            <div class="form-group">
+                <select id="typeIntervention" required>
+                    <option value="">Sélectionnez le type d'intervention</option>
+                    <option value="CORRECTIVE">Corrective</option>
+                    <option value="PREVENTIVE">Préventive</option>
+                    <option value="URGENCE">Urgence</option>
+                    <option value="AMELIORATION">Amélioration</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="degreUrgence" required>
+                    <option value="">Sélectionnez le degré d'urgence</option>
+                    <option value="1">1 - Urgent</option>
+                    <option value="2">2 - Normal</option>
+                    <option value="3">3 - Faible</option>
+                </select>
+            </div>
+            <button type="submit">Créer Intervention</button>
+        </form>
+
+        <button class="btn-secondary" onclick="getInterventions()">🔧 Voir toutes les Interventions</button>
+        <button class="btn-secondary" onclick="getStatistiques()">📊 Voir Statistiques</button>
+    </div>
+
+    <div id="result" class="result" style="display:none;"></div>
+</div>
+
+<script>
+    // Attendre que la page soit complètement chargée
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Page chargée - Initialisation...');
+
+        // Afficher les résultats
+        function showResult(title, data) {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<h4>${title}</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+        }
+
+        function showError(title, error) {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<h4 style="color: red;">${title}</h4><pre style="color: red;">${error}</pre>`;
+            }
+        }
+
+        // Créer un équipement
+        const equipementForm = document.getElementById('equipementForm');
+        if (equipementForm) {
+            equipementForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const equipement = {
+                    nom: document.getElementById('nom').value,
+                    code: document.getElementById('code').value,
+                    modele: document.getElementById('modele').value
+                };
+
+                console.log('🔧 Création équipement:', equipement);
+
+                fetch('/api/equipements', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(equipement)
+                })
+                .then(response => {
+                    console.log('📤 Réponse équipement - Status:', response.status);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('✅ Équipement créé:', data);
+                    showResult('✅ Équipement créé !', data);
+                    equipementForm.reset();
+                })
+                .catch(error => {
+                    console.error('❌ Erreur équipement:', error);
+                    showError('❌ Erreur création équipement', error.message);
+                });
+            });
+        }
+
+        // Créer une intervention
+        const interventionForm = document.getElementById('interventionForm');
+        if (interventionForm) {
+            interventionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const equipementId = document.getElementById('equipementId').value;
+                const interventionData = {
+                    description: document.getElementById('description').value,
+                    typeIntervention: document.getElementById('typeIntervention').value,
+                    degreUrgence: parseInt(document.getElementById('degreUrgence').value)
+                };
+
+                console.log('🔧 Création intervention - Données:', interventionData);
+                console.log('🔧 Équipement ID:', equipementId);
+
+                fetch(`/api/interventions/equipement/${equipementId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(interventionData)
+                })
+                .then(response => {
+                    console.log('📤 Réponse intervention - Status:', response.status);
+
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('❌ Erreur réponse:', text);
+                            throw new Error(`HTTP ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('✅ Intervention créée:', data);
+                    showResult('✅ Intervention créée !', data);
+                    interventionForm.reset();
+                })
+                .catch(error => {
+                    console.error('❌ Erreur intervention complète:', error);
+                    showError('❌ Erreur création intervention', error.message);
+                });
+            });
+        }
+
+        // Test de connexion
+        console.log('🚀 Test de connexion API...');
+        fetch('/api/equipements')
+        .then(response => {
+            if (response.ok) {
+                console.log('✅ API connectée avec succès !');
+            } else {
+                console.error('❌ Problème de connexion API');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erreur de connexion API:', error);
+        });
+    });
+
+    // Fonctions globales pour les boutons
+    function getEquipements() {
+        console.log('📋 Récupération équipements...');
+        fetch('/api/equipements')
+        .then(response => {
+            console.log('📤 Réponse équipements - Status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📋 Équipements récupérés:', data);
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<h4>📋 Liste des Équipements</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erreur récupération équipements:', error);
+        });
+    }
+
+    function getInterventions() {
+        console.log('🔧 Récupération interventions...');
+        fetch('/api/interventions')
+        .then(response => {
+            console.log('📤 Réponse interventions - Status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('🔧 Interventions récupérées:', data);
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<h4>🔧 Liste des Interventions</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erreur récupération interventions:', error);
+        });
+    }
+
+    function getStatistiques() {
+        console.log('📊 Récupération statistiques...');
+        fetch('/api/interventions/statistiques')
+        .then(response => {
+            console.log('📤 Réponse statistiques - Status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Statistiques récupérées:', data);
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<h4>📊 Statistiques des Interventions</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erreur récupération statistiques:', error);
+        });
+    }
+</script>
+</body>
+</html>
